@@ -1,22 +1,25 @@
 // 账号本子 - 账号列表页
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, KeyRound, FolderPlus, X } from 'lucide-react';
+import { Search, Plus, KeyRound, FolderPlus, X, Trash2 } from 'lucide-react';
 import { useStore } from '@/store';
 import AccountCard from '@/components/AccountCard';
 import { matchesSearch } from '@/lib/utils';
 import { DEFAULT_CATEGORIES } from '@/types';
 import { toast } from '@/components/Toast';
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function Accounts() {
   const vault = useStore((s) => s.vault);
   const addCategory = useStore((s) => s.addCategory);
+  const removeCategory = useStore((s) => s.removeCategory);
   const navigate = useNavigate();
 
   const [query, setQuery] = useState('');
   const [activeCat, setActiveCat] = useState('全部');
   const [newCat, setNewCat] = useState('');
   const [showAddCat, setShowAddCat] = useState(false);
+  const [catToDelete, setCatToDelete] = useState<string | null>(null);
 
   const accounts = vault?.accounts ?? [];
   const categories = vault?.categories ?? DEFAULT_CATEGORIES;
@@ -60,6 +63,18 @@ export default function Accounts() {
     toast('已添加分类', 'success');
   }
 
+  async function handleRemoveCategory() {
+    if (!catToDelete) return;
+    const name = catToDelete;
+    await removeCategory(name);
+    if (activeCat === name) setActiveCat('全部');
+    setCatToDelete(null);
+    toast('分类已删除，账号移至「其他」', 'success');
+  }
+
+  const isDefaultCat = (cat: string) =>
+    ['全部', '收藏', ...DEFAULT_CATEGORIES].includes(cat);
+
   return (
     <div className="animate-fade-in">
       {/* 页头 */}
@@ -101,17 +116,30 @@ export default function Accounts() {
       {/* 分类标签 */}
       <div className="mb-6 flex flex-wrap items-center gap-2">
         {tabs.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCat(cat)}
-            className={`chip ${
-              activeCat === cat
-                ? 'bg-amber-500 text-ink-950 shadow-glow'
-                : 'border border-cream/10 bg-white/[0.03] text-cream-muted hover:border-amber-500/30 hover:text-cream'
-            }`}
-          >
-            {cat}
-          </button>
+          <div key={cat} className="group relative">
+            <button
+              onClick={() => setActiveCat(cat)}
+              className={`chip ${
+                activeCat === cat
+                  ? 'bg-amber-500 text-ink-950 shadow-glow'
+                  : 'border border-cream/10 bg-white/[0.03] text-cream-muted hover:border-amber-500/30 hover:text-cream'
+              } ${!isDefaultCat(cat) ? 'pr-7' : ''}`}
+            >
+              {cat}
+            </button>
+            {!isDefaultCat(cat) && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCatToDelete(cat);
+                }}
+                className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-cream-dim opacity-0 transition-opacity hover:text-danger group-hover:opacity-100"
+                title="删除分类"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
         ))}
         {!showAddCat ? (
           <button
@@ -173,6 +201,16 @@ export default function Accounts() {
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        open={catToDelete !== null}
+        title="删除分类"
+        danger
+        description={`确定要删除分类「${catToDelete ?? ''}」吗？该分类下的账号将被移至「其他」分类。`}
+        confirmText="确认删除"
+        onConfirm={handleRemoveCategory}
+        onCancel={() => setCatToDelete(null)}
+      />
     </div>
   );
 }

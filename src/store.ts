@@ -277,10 +277,15 @@ export const useStore = create<AppState>((set, get) => ({
   removeCategory: async (name) => {
     const { vault } = get();
     if (!vault) return;
+    const accounts = vault.accounts.map((a) =>
+      a.category === name ? { ...a, category: '其他', updatedAt: Date.now() } : a,
+    );
     set({
       vault: {
         ...vault,
         categories: vault.categories.filter((c) => c !== name),
+        accounts,
+        updatedAt: Date.now(),
       },
     });
     await get().persist();
