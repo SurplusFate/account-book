@@ -2,14 +2,16 @@
 // 基于 fetch 自实现轻量 WebDAV：MKCOL / PUT / GET / PROPFIND
 // 坚果云 WebDAV 文档：https://help.jianguoyun.com/?p=2064
 //
-// 浏览器直接请求坚果云会被 CORS 拦截，通过 Cloudflare Worker 代理转发
+// 浏览器直接请求坚果云会被 CORS 拦截，通过腾讯云 SCF 代理转发。
+// 云函数平台不支持 PROPFIND/MKCOL 等非标准 HTTP 方法，
+// 因此前端统一用 POST，真实方法通过 X-Method 头传递。
 
 import type { WebDavConfig } from '@/types';
 
 const VAULT_FILE = 'vault.enc';
 
-// Cloudflare Worker CORS 代理地址
-const CORS_PROXY = 'https://account-book-proxy.1543403469-033.workers.dev';
+// 腾讯云 SCF 函数 URL
+const PROXY_URL = 'https://1308213072-k1uz3b5r8c.ap-shanghai.tencentscf.com';
 
 function normalizeServer(server: string): string {
   let s = server.trim();
@@ -34,17 +36,27 @@ async function request(
   config: WebDavConfig,
   options: { body?: string; headers?: Record<string, string> } = {},
 ): Promise<Response> {
-  // 所有请求统一发到 CORS 代理，目标 URL 通过 X-Target-URL header 传递
-  const resp = await fetch(CORS_PROXY, {
-    method,
-    headers: {
-      'X-Target-URL': url,
-      Authorization: authHeader(config),
-      ...options.headers,
-    },
-    body: options.body,
-  });
-  return resp;
+  // 统一用 POST 请求代理，真实方法和目标地址通过 header 传递
+  // 60 秒超时，避免一直转圈
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 60000);
+  try {
+    const resp = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: {
+        'X-Target-URL': url,
+        'X-Method': method,
+        Authorization: authHeader(config),
+        'Content-Type': 'text/plain; charset=utf-8',
+        ...options.headers,
+      },
+      body: options.body ?? '',
+      signal: controller.signal,
+    });
+    return resp;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /** 测试连接：尝试 PROPFIND 同步目录 */
