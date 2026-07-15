@@ -32,18 +32,54 @@ export const DEFAULT_GEN_OPTIONS: GeneratorOptions = {
 };
 
 export function generatePassword(opts: GeneratorOptions): string {
-  let pool = '';
-  if (opts.lower) pool += CHARSETS.lower;
-  if (opts.upper) pool += CHARSETS.upper;
-  if (opts.digit) pool += CHARSETS.digit;
-  if (opts.symbol) pool += CHARSETS.symbol;
-  if (!pool) return '';
+  const charsets: string[] = [];
+  if (opts.lower) charsets.push(CHARSETS.lower);
+  if (opts.upper) charsets.push(CHARSETS.upper);
+  if (opts.digit) charsets.push(CHARSETS.digit);
+  if (opts.symbol) charsets.push(CHARSETS.symbol);
+  if (!charsets.length) return '';
+
+  let pool = charsets.join('');
   const arr = new Uint32Array(opts.length);
   crypto.getRandomValues(arr);
+
   let result = '';
   for (let i = 0; i < opts.length; i++) {
     result += pool[arr[i] % pool.length];
   }
+
+  let valid = true;
+  if (opts.lower && !/[a-z]/.test(result)) valid = false;
+  if (opts.upper && !/[A-Z]/.test(result)) valid = false;
+  if (opts.digit && !/\d/.test(result)) valid = false;
+  if (opts.symbol && /[^a-zA-Z0-9]/.test(pool) && !/[^a-zA-Z0-9]/.test(result)) valid = false;
+
+  if (!valid) {
+    const required: string[] = [];
+    if (opts.lower) required.push(CHARSETS.lower);
+    if (opts.upper) required.push(CHARSETS.upper);
+    if (opts.digit) required.push(CHARSETS.digit);
+    if (opts.symbol) required.push(CHARSETS.symbol);
+
+    const remainingLen = opts.length - required.length;
+    const remainingPool = pool;
+    const remainingArr = new Uint32Array(remainingLen);
+    crypto.getRandomValues(remainingArr);
+
+    let remaining = '';
+    for (let i = 0; i < remainingLen; i++) {
+      remaining += remainingPool[remainingArr[i] % remainingPool.length];
+    }
+
+    const requiredChars = required.map((set) => {
+      const setArr = new Uint32Array(1);
+      crypto.getRandomValues(setArr);
+      return set[setArr[0] % set.length];
+    });
+
+    result = [...requiredChars, ...remaining.split('')].sort(() => Math.random() - 0.5).join('');
+  }
+
   return result;
 }
 

@@ -71,7 +71,7 @@ export default function PasswordGenerator({ onUse }: Props) {
         </div>
         <input
           type="range"
-          min={6}
+          min={8}
           max={40}
           value={opts.length}
           onChange={(e) => update('length', Number(e.target.value))}
