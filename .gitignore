@@ -13,6 +13,10 @@ dist-ssr
 *.local
 .pnpm-store
 
+# Cloudflare Worker
+worker/node_modules
+worker/.wrangler
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
