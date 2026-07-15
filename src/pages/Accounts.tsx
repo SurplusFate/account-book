@@ -133,7 +133,7 @@ export default function Accounts() {
                   e.stopPropagation();
                   setCatToDelete(cat);
                 }}
-                className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-cream-dim opacity-0 transition-opacity hover:text-danger group-hover:opacity-100"
+                className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-cream-dim hover:text-danger"
                 title="删除分类"
               >
                 <X className="h-3 w-3" />
