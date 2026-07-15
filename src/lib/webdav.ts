@@ -1,10 +1,15 @@
 // 账号本子 - WebDAV 客户端（适配坚果云）
 // 基于 fetch 自实现轻量 WebDAV：MKCOL / PUT / GET / PROPFIND
 // 坚果云 WebDAV 文档：https://help.jianguoyun.com/?p=2064
+//
+// 浏览器直接请求坚果云会被 CORS 拦截，所以通过公共 CORS 代理转发
 
 import type { WebDavConfig } from '@/types';
 
 const VAULT_FILE = 'vault.enc';
+
+// 公共 CORS 代理，解决浏览器跨域限制
+const CORS_PROXY = 'https://corsproxy.io/?';
 
 function normalizeServer(server: string): string {
   let s = server.trim();
@@ -23,13 +28,18 @@ function authHeader(config: WebDavConfig): string {
   return 'Basic ' + btoa(config.username + ':' + config.password);
 }
 
+/** 通过 CORS 代理构建请求 URL */
+function proxyUrl(originalUrl: string): string {
+  return CORS_PROXY + encodeURIComponent(originalUrl);
+}
+
 async function request(
   url: string,
   method: string,
   config: WebDavConfig,
   options: { body?: string; headers?: Record<string, string> } = {},
 ): Promise<Response> {
-  const resp = await fetch(url, {
+  const resp = await fetch(proxyUrl(url), {
     method,
     headers: {
       Authorization: authHeader(config),
