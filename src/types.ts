@@ -62,7 +62,9 @@ export interface SyncMeta {
   remoteUpdatedAt: number | null;
 }
 
-export const DEFAULT_CATEGORIES = ['社交', '工作', '财务', '购物', '其他'];
+export const DEFAULT_CATEGORIES: string[] = [];
+
+export const UNCAT = '未分类';
 
 export const DEFAULT_SETTINGS: AppSettings = {
   autoLockMinutes: 5,
@@ -75,7 +77,7 @@ export function createEmptyVault(): VaultData {
   return {
     version: 1,
     accounts: [],
-    categories: [...DEFAULT_CATEGORIES],
+    categories: [],
     settings: { ...DEFAULT_SETTINGS },
     updatedAt: Date.now(),
   };
@@ -90,7 +92,7 @@ export function createEmptyAccount(): AccountItem {
     password: '',
     url: '',
     notes: '',
-    category: '其他',
+    category: '',
     favorite: false,
     pinned: false,
     createdAt: now,

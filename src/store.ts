@@ -278,7 +278,7 @@ export const useStore = create<AppState>((set, get) => ({
     const { vault } = get();
     if (!vault) return;
     const accounts = vault.accounts.map((a) =>
-      a.category === name ? { ...a, category: '其他', updatedAt: Date.now() } : a,
+      a.category === name ? { ...a, category: '', updatedAt: Date.now() } : a,
     );
     set({
       vault: {

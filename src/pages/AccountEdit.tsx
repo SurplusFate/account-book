@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Eye, EyeOff, Wand2, Loader2 } from 'lucide-react';
 import { useStore, createEmptyAccount } from '@/store';
 import type { AccountItem } from '@/types';
-import { DEFAULT_CATEGORIES } from '@/types';
+import { DEFAULT_CATEGORIES, UNCAT } from '@/types';
 import PasswordGenerator from '@/components/PasswordGenerator';
 import StrengthMeter from '@/components/StrengthMeter';
 import { toast } from '@/components/Toast';
@@ -30,6 +30,8 @@ export default function AccountEdit() {
   const [showCatInput, setShowCatInput] = useState(false);
 
   const categories = vault?.categories ?? DEFAULT_CATEGORIES;
+  const displayCat = form.category || UNCAT;
+  const allCats = [...categories];
 
   function update<K extends keyof AccountItem>(key: K, value: AccountItem[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -167,7 +169,19 @@ export default function AccountEdit() {
           <div>
             <label className="label">分类</label>
             <div className="flex flex-wrap items-center gap-2">
-              {categories.map((cat) => (
+              <button
+                key={UNCAT}
+                type="button"
+                onClick={() => update('category', '')}
+                className={`chip ${
+                  !form.category
+                    ? 'bg-amber-500 text-ink-950'
+                    : 'border border-cream/10 bg-white/[0.03] text-cream-muted hover:border-amber-500/30'
+                }`}
+              >
+                {UNCAT}
+              </button>
+              {allCats.map((cat) => (
                 <button
                   key={cat}
                   type="button"

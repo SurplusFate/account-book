@@ -134,7 +134,7 @@ export default function AccountDetail() {
           </h1>
           <div className="mt-1 flex items-center gap-2">
             <span className="chip border border-cream/10 bg-white/[0.03] text-cream-dim">
-              {account.category}
+              {account.category || '未分类'}
             </span>
             <span className="text-xs text-cream-dim">
               更新于 {formatTime(account.updatedAt)}
