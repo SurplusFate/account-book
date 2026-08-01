@@ -25,6 +25,8 @@ body {
   margin: 0;
   background-color: #0B0F0E;
   color: #F2EBDC;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
   /* 氛围：径向光晕 + 噪点纹理 */
   background-image:
     radial-gradient(ellipse 90% 55% at 50% -8%, rgba(232, 177, 74, 0.10), transparent 70%),

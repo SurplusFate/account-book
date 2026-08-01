@@ -106,13 +106,13 @@ export default function Layout({ children }: { children: ReactNode }) {
 
       {/* 主内容区 */}
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto min-h-full max-w-5xl px-4 py-6 pb-24 md:px-8 md:pb-8">
+        <div className="mx-auto min-h-full max-w-5xl px-4 py-6 pb-[calc(env(safe-area-inset-bottom)+6rem)] md:px-8 md:pb-8">
           {children}
         </div>
       </main>
 
       {/* 移动端底部导航 */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-cream/10 bg-ink-950/90 backdrop-blur-md md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-cream/10 bg-ink-950/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden">
         {NAV.map((item) => (
           <NavLink
             key={item.to}

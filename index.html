@@ -3,8 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/account-book/icons/icon-192.png" />
+    <link rel="manifest" href="/account-book/manifest.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="账号本子 - 网页版加密账号密码管理，支持坚果云 WebDAV 云同步" />
+    <meta name="theme-color" content="#0B0F0E" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="账号本子" />
+    <link rel="apple-touch-icon" href="/account-book/icons/icon-192.png" />
     <title>账号本子 · 加密账号管理</title>
     <script type="module">
       if (import.meta.hot?.on) {
@@ -15,6 +23,15 @@
             )
           }
         })
+      }
+    </script>
+    <script type="module">
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/account-book/sw.js').catch((err) => {
+            console.error('Service Worker 注册失败:', err);
+          });
+        });
       }
     </script>
   </head>
