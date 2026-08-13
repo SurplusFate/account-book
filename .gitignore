@@ -30,3 +30,12 @@ worker/.wrangler
 
 # IDE workspace
 .trae/
+.trae-html-share-packages/
+
+# Android build
+android/.gradle
+android/build
+android/app/build
+android/**/*.iml
+android/local.properties
+android/capacitor-cordova-android-plugins/build

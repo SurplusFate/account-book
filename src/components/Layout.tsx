@@ -69,6 +69,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               key={item.to}
               to={item.to}
               end={item.end}
+              replace
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all ${
                   isActive
@@ -118,6 +119,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             key={item.to}
             to={item.to}
             end={item.end}
+            replace
             className={({ isActive }) =>
               `flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] transition-colors ${
                 isActive ? 'text-amber-400' : 'text-cream-dim'

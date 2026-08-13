@@ -1,0 +1,7 @@
+{
+  "FunctionName": "account-book-proxy",
+  "TriggerName": "apigw-trigger",
+  "Type": "apigw",
+  "Namespace": "default",
+  "TriggerDesc": "{\"service\":{\"serviceName\":\"account-book-proxy-service\",\"protocol\":\"http\",\"netTypes\":[\"OUTER\"]},\"api\":{\"apiName\":\"proxy-api\",\"method\":\"ANY\",\"path\":\"/proxy\"},\"environment\":\"release\"}"
+}

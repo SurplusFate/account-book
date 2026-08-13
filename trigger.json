@@ -1,0 +1,8 @@
+{
+  "FunctionName": "account-book-proxy",
+  "TriggerName": "web",
+  "Type": "http",
+  "TriggerDesc": "{\"AuthType\":\"NONE\",\"NetTypes\":[\"OUTER\"]}",
+  "Namespace": "default",
+  "Qualifier": "$LATEST"
+}

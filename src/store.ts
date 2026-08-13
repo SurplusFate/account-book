@@ -37,6 +37,7 @@ interface AppState {
   initialized: boolean | null; // 本地是否已有保险库
   unlocked: boolean;
   key: CryptoKey | null;
+  masterPassword: string; // 主密码原文（仅内存，用于同步时用远程 salt 派生密钥）
   vault: VaultData | null;
   encrypted: EncryptedVault | null;
   loading: boolean;
@@ -90,6 +91,7 @@ export const useStore = create<AppState>((set, get) => ({
   initialized: null,
   unlocked: false,
   key: null,
+  masterPassword: '',
   vault: null,
   encrypted: null,
   loading: false,
@@ -127,6 +129,7 @@ export const useStore = create<AppState>((set, get) => ({
         initialized: true,
         unlocked: true,
         key,
+        masterPassword: password,
         vault,
         encrypted: full,
         loading: false,
@@ -161,6 +164,7 @@ export const useStore = create<AppState>((set, get) => ({
       set({
         unlocked: true,
         key,
+        masterPassword: password,
         vault,
         encrypted: enc,
         loading: false,
@@ -177,6 +181,7 @@ export const useStore = create<AppState>((set, get) => ({
     set({
       unlocked: false,
       key: null,
+      masterPassword: '',
       vault: null,
       encrypted: null,
       error: null,
@@ -205,7 +210,7 @@ export const useStore = create<AppState>((set, get) => ({
     const { ciphertext, iv } = await encryptJSON(newKey, vault);
     const full: EncryptedVault = { ...newEnc, ciphertext, iv };
     await saveEncryptedVault(full);
-    set({ key: newKey, encrypted: full, error: null });
+    set({ key: newKey, masterPassword: newPwd, encrypted: full, error: null });
     return true;
   },
 
@@ -316,13 +321,13 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   sync: async () => {
-    const { webdavConfig, vault, encrypted, key } = get();
+    const { webdavConfig, vault, encrypted, key, masterPassword } = get();
     if (!webdavConfig || !vault || !encrypted || !key) {
       return { ok: false, message: '缺少配置或未解锁' };
     }
     set({ syncStatus: 'syncing' });
     try {
-      const result = await performSync(webdavConfig, vault, encrypted, key);
+      const result = await performSync(webdavConfig, vault, encrypted, key, masterPassword);
       const status: SyncStatus = result.ok ? 'success' : 'error';
       const newMeta: SyncMeta = {
         lastSyncAt: Date.now(),
@@ -376,6 +381,7 @@ export const useStore = create<AppState>((set, get) => ({
         initialized: true,
         unlocked: false,
         key: null,
+        masterPassword: '',
         vault: null,
         encrypted: null,
         error: null,
@@ -399,6 +405,7 @@ export const useStore = create<AppState>((set, get) => ({
       initialized: false,
       unlocked: false,
       key: null,
+      masterPassword: '',
       vault: null,
       encrypted: null,
       webdavConfig: null,

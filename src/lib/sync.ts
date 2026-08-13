@@ -6,7 +6,7 @@ import type {
   VaultData,
   EncryptedVault,
 } from '@/types';
-import { decryptJSON, encryptJSON } from '@/lib/crypto';
+import { decryptJSON, encryptJSON, deriveKey, base64ToBuf } from '@/lib/crypto';
 import { downloadVault, uploadVault } from '@/lib/webdav';
 import type { WebDavConfig } from '@/types';
 
@@ -75,7 +75,7 @@ export function mergeVaults(local: VaultData, remote: VaultData): VaultData {
   };
 }
 
-/** 用当前密钥解密远程加密保险库 */
+/** 用指定密钥解密远程加密保险库 */
 export async function decryptRemoteVault(
   remoteEncrypted: EncryptedVault,
   key: CryptoKey,
@@ -91,12 +91,15 @@ export async function decryptRemoteVault(
   }
 }
 
-/** 执行完整同步流程 */
+/** 执行完整同步流程
+ * @param masterPassword 主密码原文，用于解密远程数据（远程可能使用不同的 salt）
+ */
 export async function performSync(
   config: WebDavConfig,
   localVault: VaultData,
   localEncrypted: EncryptedVault,
   key: CryptoKey,
+  masterPassword: string,
 ): Promise<SyncResult> {
   // 1. 下载远程
   const dl = await downloadVault(config);
@@ -129,8 +132,27 @@ export async function performSync(
     };
   }
 
-  // 3. 远程有数据 → 解密并合并
-  const remoteVault = await decryptRemoteVault(remoteEncrypted, key);
+  // 3. 远程有数据 → 解密远程数据
+  // 关键：不同设备初始化时生成的 salt 不同，即使主密码一致也会派生出不同的密钥
+  // 因此需要用主密码 + 远程的 salt 重新派生密钥来解密远程数据
+  let decryptKey: CryptoKey = key;
+  const sameSalt = localEncrypted.salt === remoteEncrypted.salt;
+  if (!sameSalt) {
+    // salt 不同，用主密码 + 远程 salt 重新派生密钥
+    const remoteSalt = base64ToBuf(remoteEncrypted.salt);
+    try {
+      decryptKey = await deriveKey(masterPassword, remoteSalt, remoteEncrypted.iterations);
+    } catch {
+      return {
+        ok: false,
+        message: '无法派生解密密钥',
+        merged: null,
+        remoteUpdatedAt: null,
+      };
+    }
+  }
+
+  const remoteVault = await decryptRemoteVault(remoteEncrypted, decryptKey);
   if (!remoteVault) {
     return {
       ok: false,
@@ -142,7 +164,7 @@ export async function performSync(
 
   const merged = mergeVaults(localVault, remoteVault);
 
-  // 4. 重新加密合并后的保险库
+  // 4. 重新加密合并后的保险库（使用本地密钥）
   const { ciphertext, iv } = await encryptJSON(key, merged);
   const newEncrypted: EncryptedVault = {
     ...localEncrypted,
