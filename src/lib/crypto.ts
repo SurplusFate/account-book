@@ -147,5 +147,3 @@ export async function unlockWithPassword(
   const ok = await verifyKey(key, verifier, verifierIv);
   return ok ? key : null;
 }
-
-export { PBKDF2_ITERATIONS };

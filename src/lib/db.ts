@@ -102,10 +102,6 @@ export async function saveSyncMeta(meta: SyncMeta): Promise<void> {
 }
 
 // ---------- 上次活动时间（用于自动锁定） ----------
-export async function getLastActiveAt(): Promise<number> {
-  return (await getMeta<number>('lastActiveAt')) ?? Date.now();
-}
-
 export async function touchLastActiveAt(): Promise<void> {
   await setMeta('lastActiveAt', Date.now());
 }

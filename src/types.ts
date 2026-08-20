@@ -21,7 +21,6 @@ export interface AppSettings {
   autoLockMinutes: number;
   clipboardClearSeconds: number;
   autoSync: boolean;
-  syncIntervalMinutes: number;
 }
 
 /** 保险库明文结构（加密前） */
@@ -70,7 +69,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoLockMinutes: 5,
   clipboardClearSeconds: 20,
   autoSync: false,
-  syncIntervalMinutes: 30,
 };
 
 export function createEmptyVault(): VaultData {

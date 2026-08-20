@@ -46,7 +46,7 @@ export async function authenticateWithBiometry(reason: string = '验证身份'):
 
 export async function storePasswordWithBiometry(password: string): Promise<boolean> {
   try {
-    await BiometricAuth.authenticate({ reason: '启用指纹解锁' });
+    await BiometricAuth.authenticate({ reason: '启用生物识别解锁' });
     const enc = btoa(unescape(encodeURIComponent(password)));
     localStorage.setItem(STORAGE_KEY, enc);
     localStorage.setItem(SETTING_KEY, '1');
@@ -60,7 +60,7 @@ export async function retrievePasswordWithBiometry(): Promise<string | null> {
   const enc = localStorage.getItem(STORAGE_KEY);
   if (!enc) return null;
   try {
-    const ok = await authenticateWithBiometry('使用指纹解锁账号本子');
+    const ok = await authenticateWithBiometry('验证身份以解锁账号本子');
     if (!ok) return null;
     return decodeURIComponent(escape(atob(enc)));
   } catch {

@@ -16,7 +16,6 @@ export default function AccountEdit() {
 
   const vault = useStore((s) => s.vault);
   const upsertAccount = useStore((s) => s.upsertAccount);
-  const removeCategory = useStore((s) => s.removeCategory);
 
   const existing = id ? vault?.accounts.find((a) => a.id === id) : undefined;
 
@@ -30,7 +29,6 @@ export default function AccountEdit() {
   const [showCatInput, setShowCatInput] = useState(false);
 
   const categories = vault?.categories ?? DEFAULT_CATEGORIES;
-  const displayCat = form.category || UNCAT;
   const allCats = [...categories];
 
   function update<K extends keyof AccountItem>(key: K, value: AccountItem[K]) {

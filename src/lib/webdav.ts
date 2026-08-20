@@ -122,5 +122,3 @@ export async function downloadVault(
     return { ok: false, data: null, message: '网络错误：' + (e as Error).message };
   }
 }
-
-export { VAULT_FILE };

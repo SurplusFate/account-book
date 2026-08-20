@@ -83,7 +83,6 @@ interface AppState {
 
   // ---------- 内部 ----------
   persist: () => Promise<void>;
-  setError: (msg: string | null) => void;
   touch: () => void;
 }
 
@@ -431,8 +430,6 @@ export const useStore = create<AppState>((set, get) => ({
       void get().sync();
     }
   },
-
-  setError: (msg) => set({ error: msg }),
 
   touch: () => {
     void touchLastActiveAt();

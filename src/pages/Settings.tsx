@@ -13,13 +13,11 @@ import {
   EyeOff,
   Timer,
   Clipboard,
-  Smartphone,
   Fingerprint,
 } from 'lucide-react';
 import { useStore } from '@/store';
 import StrengthMeter from '@/components/StrengthMeter';
 import ConfirmModal from '@/components/ConfirmModal';
-import InstallApp from '@/components/InstallApp';
 import { passwordStrength } from '@/lib/utils';
 import { toast } from '@/components/Toast';
 import {
@@ -177,18 +175,6 @@ export default function Settings() {
         <h1 className="font-serif text-2xl font-semibold text-cream">设置</h1>
         <p className="mt-1 text-sm text-cream-dim">安全选项、数据管理与主密码</p>
       </div>
-
-      {/* 安装到桌面 */}
-      <section className="card mb-5 p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <Smartphone className="h-5 w-5 text-amber-400" />
-          <h2 className="font-serif text-lg font-semibold text-cream">安卓 App</h2>
-        </div>
-        <InstallApp />
-        <p className="mt-3 text-xs leading-relaxed text-cream-dim">
-          无需安装任何额外软件。安装后数据通过坚果云 WebDAV 与网页版实时同步，同一主密码即可解锁。
-        </p>
-      </section>
 
       {/* 安全设置 */}
       <section className="card mb-5 p-6">

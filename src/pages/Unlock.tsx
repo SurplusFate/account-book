@@ -1,5 +1,5 @@
 // 账号本子 - 解锁页（首次设置 / 解锁）
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookKey, Eye, EyeOff, ShieldCheck, Loader2, Fingerprint } from 'lucide-react';
 import { useStore } from '@/store';
@@ -31,6 +31,8 @@ export default function Unlock() {
   const [bioEnabled, setBioEnabled] = useState(false);
   const [bioLoading, setBioLoading] = useState(false);
   const [offerEnableBio, setOfferEnableBio] = useState(false);
+  // 防止自动指纹验证在一次会话内被重复触发
+  const autoTriedRef = useRef(false);
 
   const strength = passwordStrength(password);
 
@@ -38,11 +40,16 @@ export default function Unlock() {
     void (async () => {
       const info = await isBiometricAvailable();
       setBioAvailable(info.available);
-      if (info.available) {
-        const enabled = await isBiometricEnabled();
-        setBioEnabled(enabled);
+      if (!info.available) return;
+      const enabled = await isBiometricEnabled();
+      setBioEnabled(enabled);
+      // 已初始化（非首次设置）且启用指纹/面容，进入页面自动触发一次验证
+      if (enabled && initialized && !autoTriedRef.current) {
+        autoTriedRef.current = true;
+        await handleBioUnlock();
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleSubmit(e: FormEvent) {

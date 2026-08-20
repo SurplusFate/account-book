@@ -1,6 +1,5 @@
 // 账号本子 - 轻量 Toast 通知
 import { create } from 'zustand';
-import { useEffect } from 'react';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 type ToastType = 'success' | 'error' | 'info';
@@ -42,7 +41,6 @@ const config: Record<ToastType, { icon: typeof Info; color: string }> = {
 function ToastCard({ item }: { item: ToastItem }) {
   const remove = useToast((s) => s.remove);
   const { icon: Icon, color } = config[item.type];
-  useEffect(() => {}, []);
   return (
     <div className="animate-rise flex items-center gap-3 rounded-xl border border-cream/10 bg-ink-800/95 px-4 py-3 shadow-card backdrop-blur-md">
       <Icon className={`h-5 w-5 shrink-0 ${color}`} />
