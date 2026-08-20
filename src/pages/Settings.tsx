@@ -25,7 +25,9 @@ import {
   isBiometricEnabled,
   setBiometricEnabled,
   storePasswordWithBiometry,
+  biometricLabel,
 } from '@/lib/biometric';
+import { BiometryType } from '@aparajita/capacitor-biometric-auth';
 
 const AUTO_LOCK_OPTIONS = [
   { value: 1, label: '1 分钟' },
@@ -66,6 +68,8 @@ export default function Settings() {
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioEnabled, setBioEnabledState] = useState(false);
   const [bioBusy, setBioBusy] = useState(false);
+  const [bioType, setBioType] = useState<BiometryType>(BiometryType.none);
+  const bioName = biometricLabel(bioType);
 
   const settings = vault?.settings;
 
@@ -74,6 +78,7 @@ export default function Settings() {
       const info = await isBiometricAvailable();
       setBioAvailable(info.available);
       if (info.available) {
+        setBioType(info.type);
         setBioEnabledState(await isBiometricEnabled());
       }
     })();
@@ -83,7 +88,7 @@ export default function Settings() {
     const masterPassword = useStore.getState().masterPassword;
     if (!bioEnabled) {
       if (!masterPassword) {
-        toast('请先重新解锁再启用指纹', 'error');
+        toast(`请先重新解锁再启用${bioName}`, 'error');
         return;
       }
       setBioBusy(true);
@@ -91,14 +96,14 @@ export default function Settings() {
       setBioBusy(false);
       if (ok) {
         setBioEnabledState(true);
-        toast('指纹/面容解锁已启用', 'success');
+        toast(`${bioName}解锁已启用`, 'success');
       } else {
         toast('启用失败，请重试', 'error');
       }
     } else {
       await setBiometricEnabled(false);
       setBioEnabledState(false);
-      toast('指纹/面容解锁已关闭', 'success');
+      toast(`${bioName}解锁已关闭`, 'success');
     }
   }
 
@@ -229,15 +234,15 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* 指纹/面容解锁 */}
+        {/* 生物识别解锁（按设备实际支持类型显示文案） */}
         {bioAvailable && (
           <div className="mt-5 flex items-center justify-between rounded-xl border border-cream/10 bg-white/[0.02] px-4 py-3">
             <div className="flex items-center gap-3">
               <Fingerprint className="h-4.5 w-4.5 text-amber-400" />
               <div>
-                <div className="text-sm text-cream">指纹/面容解锁</div>
+                <div className="text-sm text-cream">{bioName}解锁</div>
                 <div className="mt-0.5 text-xs text-cream-dim">
-                  使用手机指纹或面容直接解锁，无需输入主密码
+                  使用手机{bioName}直接解锁，无需输入主密码
                 </div>
               </div>
             </div>

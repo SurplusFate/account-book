@@ -10,7 +10,9 @@ import {
   isBiometricEnabled,
   retrievePasswordWithBiometry,
   storePasswordWithBiometry,
+  biometricLabel,
 } from '@/lib/biometric';
+import { BiometryType } from '@aparajita/capacitor-biometric-auth';
 
 export default function Unlock() {
   const initialized = useStore((s) => s.initialized);
@@ -31,8 +33,11 @@ export default function Unlock() {
   const [bioEnabled, setBioEnabled] = useState(false);
   const [bioLoading, setBioLoading] = useState(false);
   const [offerEnableBio, setOfferEnableBio] = useState(false);
-  // 防止自动指纹验证在一次会话内被重复触发
+  const [bioType, setBioType] = useState<BiometryType>(BiometryType.none);
+  // 防止自动生物识别验证在一次会话内被重复触发
   const autoTriedRef = useRef(false);
+  // 设备实际支持的生物识别类型对应的展示名（指纹 / 面容 / 虹膜）
+  const bioName = biometricLabel(bioType);
 
   const strength = passwordStrength(password);
 
@@ -41,9 +46,10 @@ export default function Unlock() {
       const info = await isBiometricAvailable();
       setBioAvailable(info.available);
       if (!info.available) return;
+      setBioType(info.type);
       const enabled = await isBiometricEnabled();
       setBioEnabled(enabled);
-      // 已初始化（非首次设置）且启用指纹/面容，进入页面自动触发一次验证
+      // 已初始化（非首次设置）且启用生物识别，进入页面自动触发一次验证
       if (enabled && initialized && !autoTriedRef.current) {
         autoTriedRef.current = true;
         await handleBioUnlock();
@@ -200,7 +206,7 @@ export default function Unlock() {
               className="btn-ghost mt-3 w-full flex items-center justify-center gap-2"
             >
               <Fingerprint className="h-4.5 w-4.5" />
-              使用指纹/面容解锁
+              使用{bioName}解锁
             </button>
           )}
 
@@ -209,8 +215,8 @@ export default function Unlock() {
               <div className="flex items-start gap-3">
                 <Fingerprint className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
                 <div className="flex-1 text-sm">
-                  <p className="font-medium text-cream mb-1">是否启用指纹/面容解锁？</p>
-                  <p className="text-cream-dim mb-3">下次打开可直接通过指纹或面容解锁，无需输入主密码。</p>
+                  <p className="font-medium text-cream mb-1">是否启用{bioName}解锁？</p>
+                  <p className="text-cream-dim mb-3">下次打开可直接通过{bioName}解锁，无需输入主密码。</p>
                   <div className="flex gap-2">
                     <button
                       type="button"

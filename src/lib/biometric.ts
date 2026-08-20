@@ -20,6 +20,20 @@ export async function isBiometricAvailable(): Promise<{
   }
 }
 
+/** 根据设备实际支持的生物识别类型生成展示文案 */
+export function biometricLabel(type: BiometryType): string {
+  switch (type) {
+    case BiometryType.faceAuthentication:
+      return '面容';
+    case BiometryType.irisAuthentication:
+      return '虹膜';
+    case BiometryType.fingerprintAuthentication:
+      return '指纹';
+    default:
+      return '生物识别';
+  }
+}
+
 export async function isBiometricEnabled(): Promise<boolean> {
   const v = localStorage.getItem(SETTING_KEY);
   const encPwd = localStorage.getItem(STORAGE_KEY);
