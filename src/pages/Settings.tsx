@@ -1,5 +1,5 @@
 // 账号本子 - 设置页
-import { useState, useRef, type FormEvent } from 'react';
+import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Settings as SettingsIcon,
@@ -14,6 +14,7 @@ import {
   Timer,
   Clipboard,
   Smartphone,
+  Fingerprint,
 } from 'lucide-react';
 import { useStore } from '@/store';
 import StrengthMeter from '@/components/StrengthMeter';
@@ -21,6 +22,12 @@ import ConfirmModal from '@/components/ConfirmModal';
 import InstallApp from '@/components/InstallApp';
 import { passwordStrength } from '@/lib/utils';
 import { toast } from '@/components/Toast';
+import {
+  isBiometricAvailable,
+  isBiometricEnabled,
+  setBiometricEnabled,
+  storePasswordWithBiometry,
+} from '@/lib/biometric';
 
 const AUTO_LOCK_OPTIONS = [
   { value: 1, label: '1 分钟' },
@@ -58,7 +65,44 @@ export default function Settings() {
   const [confirmWipe, setConfirmWipe] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioEnabled, setBioEnabledState] = useState(false);
+  const [bioBusy, setBioBusy] = useState(false);
+
   const settings = vault?.settings;
+
+  useEffect(() => {
+    void (async () => {
+      const info = await isBiometricAvailable();
+      setBioAvailable(info.available);
+      if (info.available) {
+        setBioEnabledState(await isBiometricEnabled());
+      }
+    })();
+  }, []);
+
+  async function handleToggleBio() {
+    const masterPassword = useStore.getState().masterPassword;
+    if (!bioEnabled) {
+      if (!masterPassword) {
+        toast('请先重新解锁再启用指纹', 'error');
+        return;
+      }
+      setBioBusy(true);
+      const ok = await storePasswordWithBiometry(masterPassword);
+      setBioBusy(false);
+      if (ok) {
+        setBioEnabledState(true);
+        toast('指纹/面容解锁已启用', 'success');
+      } else {
+        toast('启用失败，请重试', 'error');
+      }
+    } else {
+      await setBiometricEnabled(false);
+      setBioEnabledState(false);
+      toast('指纹/面容解锁已关闭', 'success');
+    }
+  }
 
   async function handleChangePassword(e: FormEvent) {
     e.preventDefault();
@@ -198,6 +242,34 @@ export default function Settings() {
             ))}
           </div>
         </div>
+
+        {/* 指纹/面容解锁 */}
+        {bioAvailable && (
+          <div className="mt-5 flex items-center justify-between rounded-xl border border-cream/10 bg-white/[0.02] px-4 py-3">
+            <div className="flex items-center gap-3">
+              <Fingerprint className="h-4.5 w-4.5 text-amber-400" />
+              <div>
+                <div className="text-sm text-cream">指纹/面容解锁</div>
+                <div className="mt-0.5 text-xs text-cream-dim">
+                  使用手机指纹或面容直接解锁，无需输入主密码
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleToggleBio}
+              disabled={bioBusy}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${
+                bioEnabled ? 'bg-amber-500' : 'bg-white/10'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                  bioEnabled ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        )}
       </section>
 
       {/* 修改主密码 */}
