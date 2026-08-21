@@ -4,8 +4,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== 主题变量：深色（默认，夜间模式） ===== */
 :root {
   color-scheme: dark;
+  --bg: #0B0F0E;
+  --bg-elev: #0E1A17;
+  --bg-card: rgba(19, 35, 31, 0.5);
+  --bg-card-solid: #13231F;
+  --bg-input: rgba(19, 35, 31, 0.6);
+  --bg-input-focus: #13231F;
+  --bg-chip-inactive: rgba(255, 255, 255, 0.03);
+  --border-subtle: rgba(242, 235, 220, 0.08);
+  --border: rgba(242, 235, 220, 0.10);
+  --border-active: rgba(232, 177, 74, 0.50);
+  --text: #F2EBDC;
+  --text-muted: #C9C3B4;
+  --text-dim: #8A958F;
+  --text-inverse: #0B0F0E;
+  --accent: #E8B14A;
+  --accent-hover: #EFC56A;
+  --accent-soft: rgba(232, 177, 74, 0.10);
+  --danger: #E06464;
+  --danger-soft: rgba(224, 100, 100, 0.10);
+  --success: #5BC18F;
+  /* 背景氛围 */
+  --glow-1: rgba(232, 177, 74, 0.10);
+  --glow-2: rgba(91, 193, 143, 0.05);
+  --noise-opacity: 0.5;
+  --noise-color: 0 0 0 0 0.9, 0 0 0 0 0.85, 0 0 0 0 0.7, 0 0 0 0.035 0;
+  --selection-bg: rgba(232, 177, 74, 0.3);
+  --selection-text: #FDF6E6;
+  --scrollbar-thumb: rgba(232, 177, 74, 0.18);
+  --scrollbar-thumb-hover: rgba(232, 177, 74, 0.32);
+  /* 字体 */
   font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -13,6 +44,39 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== 主题变量：浅色（日间模式） ===== */
+:root.light {
+  color-scheme: light;
+  --bg: #FBF7EE;
+  --bg-elev: #F3EAD7;
+  --bg-card: rgba(255, 255, 255, 0.7);
+  --bg-card-solid: #FFFFFF;
+  --bg-input: rgba(255, 255, 255, 0.9);
+  --bg-input-focus: #FFFFFF;
+  --bg-chip-inactive: rgba(0, 0, 0, 0.03);
+  --border-subtle: rgba(20, 30, 27, 0.08);
+  --border: rgba(20, 30, 27, 0.10);
+  --border-active: rgba(212, 154, 46, 0.55);
+  --text: #1A221F;
+  --text-muted: #4A5852;
+  --text-dim: #7C8A83;
+  --text-inverse: #F2EBDC;
+  --accent: #D49A2E;
+  --accent-hover: #E8B14A;
+  --accent-soft: rgba(212, 154, 46, 0.12);
+  --danger: #C94949;
+  --danger-soft: rgba(201, 73, 73, 0.08);
+  --success: #3FA16F;
+  --glow-1: rgba(212, 154, 46, 0.14);
+  --glow-2: rgba(63, 161, 111, 0.08);
+  --noise-opacity: 0.25;
+  --noise-color: 0 0 0 0 0.1, 0 0 0 0 0.08, 0 0 0 0 0.05, 0 0 0 0.025 0;
+  --selection-bg: rgba(212, 154, 46, 0.25);
+  --selection-text: #1A221F;
+  --scrollbar-thumb: rgba(212, 154, 46, 0.25);
+  --scrollbar-thumb-hover: rgba(212, 154, 46, 0.45);
 }
 
 html,
@@ -23,15 +87,20 @@ body,
 
 body {
   margin: 0;
-  background-color: #0B0F0E;
-  color: #F2EBDC;
+  background-color: var(--bg);
+  color: var(--text);
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: contain;
+  /* 安全区域：防止内容与状态栏/导航栏重叠 */
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
   /* 氛围：径向光晕 + 噪点纹理 */
   background-image:
-    radial-gradient(ellipse 90% 55% at 50% -8%, rgba(232, 177, 74, 0.10), transparent 70%),
-    radial-gradient(ellipse 70% 50% at 100% 100%, rgba(91, 193, 143, 0.05), transparent 60%);
+    radial-gradient(ellipse 90% 55% at 50% -8%, var(--glow-1), transparent 70%),
+    radial-gradient(ellipse 70% 50% at 100% 100%, var(--glow-2), transparent 60%);
   background-attachment: fixed;
+  transition: background-color 0.3s ease, color 0.3s ease, background-image 0.3s ease;
 }
 
 /* 噪点纹理覆盖层 */
@@ -41,13 +110,16 @@ body::before {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.5;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.9 0 0 0 0 0.85 0 0 0 0 0.7 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: var(--noise-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='var(--noise-color)'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  transition: opacity 0.3s ease;
 }
 
 #root {
   position: relative;
   z-index: 1;
+  /* 安全区域：#root 内部处理 bottom，body 处理 top/left/right */
+  min-height: calc(100% - env(safe-area-inset-top));
 }
 
 /* 自定义滚动条 */
@@ -59,54 +131,84 @@ body::before {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(232, 177, 74, 0.18);
+  background: var(--scrollbar-thumb);
   border-radius: 8px;
   border: 2px solid transparent;
   background-clip: padding-box;
+  transition: background 0.2s ease;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(232, 177, 74, 0.32);
+  background: var(--scrollbar-thumb-hover);
   background-clip: padding-box;
 }
 
 /* 选中文本 */
 ::selection {
-  background: rgba(232, 177, 74, 0.3);
-  color: #FDF6E6;
+  background: var(--selection-bg);
+  color: var(--selection-text);
 }
 
 @layer components {
   /* 主按钮 */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5
-      font-medium text-ink-950 shadow-glow transition-all
-      hover:bg-amber-400 hover:shadow-[0_0_50px_-8px_rgba(232,177,74,0.55)]
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5
+      font-medium shadow-glow transition-all
       active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none;
+    background-color: var(--accent);
+    color: var(--text-inverse);
+  }
+  .btn-primary:hover {
+    background-color: var(--accent-hover);
+    box-shadow: 0 0 50px -8px rgba(232, 177, 74, 0.55);
   }
   /* 次按钮 */
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-cream/20
-      bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-cream transition-all
-      hover:border-amber-500/40 hover:bg-amber-500/[0.08] hover:text-amber-100
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all
       active:scale-[0.98];
+    border: 1px solid var(--border);
+    background-color: var(--bg-chip-inactive);
+    color: var(--text);
+  }
+  .btn-ghost:hover {
+    border-color: rgba(232, 177, 74, 0.4);
+    background-color: var(--accent-soft);
+    color: var(--accent);
   }
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-danger/30
-      bg-danger/10 px-4 py-2.5 text-sm font-medium text-danger transition-all
-      hover:bg-danger/20 active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all
+      active:scale-[0.98];
+    border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+    background-color: var(--danger-soft);
+    color: var(--danger);
+  }
+  .btn-danger:hover {
+    background-color: color-mix(in srgb, var(--danger) 20%, transparent);
   }
   /* 输入框 */
   .input {
-    @apply w-full rounded-xl border border-cream/10 bg-ink-800/60 px-4 py-3 text-cream
-      placeholder:text-cream-dim/60 outline-none transition-all
-      focus:border-amber-500/50 focus:bg-ink-800 focus:ring-2 focus:ring-amber-500/20;
+    @apply w-full rounded-xl px-4 py-3 outline-none transition-all
+      focus:ring-2;
+    border: 1px solid var(--border);
+    background-color: var(--bg-input);
+    color: var(--text);
+  }
+  .input::placeholder {
+    color: color-mix(in srgb, var(--text-dim) 60%, transparent);
+  }
+  .input:focus {
+    border-color: var(--border-active);
+    background-color: var(--bg-input-focus);
+    --tw-ring-color: color-mix(in srgb, var(--accent) 20%, transparent);
   }
   .label {
-    @apply mb-1.5 block text-xs font-medium uppercase tracking-wider text-cream-dim;
+    @apply mb-1.5 block text-xs font-medium uppercase tracking-wider;
+    color: var(--text-dim);
   }
   /* 卡片 */
   .card {
-    @apply rounded-2xl border border-cream/10 bg-ink-800/50 backdrop-blur-sm shadow-card;
+    @apply rounded-2xl backdrop-blur-sm shadow-card;
+    border: 1px solid var(--border);
+    background-color: var(--bg-card);
   }
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium

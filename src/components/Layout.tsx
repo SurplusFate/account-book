@@ -50,9 +50,19 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* 桌面侧边栏 */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-cream/8 bg-ink-900/40 backdrop-blur-sm md:flex">
+      <aside
+        className="hidden w-60 shrink-0 flex-col border-r backdrop-blur-sm md:flex"
+        style={{
+          borderColor: 'var(--border-subtle)',
+          backgroundColor: 'color-mix(in srgb, var(--bg-elev) 40%, transparent)',
+          paddingTop: 'env(safe-area-inset-top)',
+        }}
+      >
         <div className="flex items-center gap-2.5 px-6 py-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-xl"
+            style={{ backgroundColor: 'var(--accent-soft)', color: 'var(--accent)' }}
+          >
             <BookKey className="h-5 w-5" />
           </div>
           <div>
@@ -73,10 +83,14 @@ export default function Layout({ children }: { children: ReactNode }) {
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all ${
                   isActive
-                    ? 'bg-amber-500/10 text-amber-100 shadow-[inset_0_0_0_1px_rgba(232,177,74,0.2)]'
-                    : 'text-cream-muted hover:bg-white/[0.03] hover:text-cream'
+                    ? 'shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_20%,transparent)]'
+                    : 'hover:bg-white/[0.03] hover:text-cream'
                 }`
               }
+              style={({ isActive }) => ({
+                backgroundColor: isActive ? 'var(--accent-soft)' : 'transparent',
+                color: isActive ? 'var(--accent-hover)' : 'var(--text-muted)',
+              })}
             >
               <item.icon className="h-[18px] w-[18px]" />
               {item.label}
@@ -97,7 +111,8 @@ export default function Layout({ children }: { children: ReactNode }) {
               lock();
               navigate('/unlock');
             }}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs text-cream-dim transition-colors hover:bg-white/[0.03] hover:text-cream"
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs transition-colors hover:bg-white/[0.03] hover:text-cream"
+            style={{ color: 'var(--text-dim)' }}
           >
             <Lock className="h-3.5 w-3.5" />
             立即锁定
@@ -106,14 +121,24 @@ export default function Layout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* 主内容区 */}
-      <main className="flex-1 overflow-y-auto">
+      <main
+        className="flex-1 overflow-y-auto"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
         <div className="mx-auto min-h-full max-w-5xl px-4 py-6 pb-[calc(env(safe-area-inset-bottom)+6rem)] md:px-8 md:pb-8">
           {children}
         </div>
       </main>
 
       {/* 移动端底部导航 */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-cream/10 bg-ink-950/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden">
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-40 flex border-t backdrop-blur-md md:hidden"
+        style={{
+          borderColor: 'var(--border)',
+          backgroundColor: 'color-mix(in srgb, var(--bg) 90%, transparent)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
+      >
         {NAV.map((item) => (
           <NavLink
             key={item.to}
@@ -121,10 +146,11 @@ export default function Layout({ children }: { children: ReactNode }) {
             end={item.end}
             replace
             className={({ isActive }) =>
-              `flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] transition-colors ${
-                isActive ? 'text-amber-400' : 'text-cream-dim'
-              }`
+              `flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] transition-colors`
             }
+            style={({ isActive }) => ({
+              color: isActive ? 'var(--accent)' : 'var(--text-dim)',
+            })}
           >
             <item.icon className="h-5 w-5" />
             {item.label}
@@ -132,10 +158,14 @@ export default function Layout({ children }: { children: ReactNode }) {
         ))}
         <NavLink
           to="/account/new"
-          className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] text-amber-400"
+          className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px]"
+          style={{ color: 'var(--accent)' }}
         >
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 shadow-glow">
-            <Plus className="h-4 w-4 text-ink-950" />
+          <div
+            className="flex h-7 w-7 items-center justify-center rounded-full shadow-glow"
+            style={{ backgroundColor: 'var(--accent)' }}
+          >
+            <Plus className="h-4 w-4" style={{ color: 'var(--text-inverse)' }} />
           </div>
         </NavLink>
       </nav>

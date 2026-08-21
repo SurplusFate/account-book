@@ -22,9 +22,15 @@ export default function App() {
   // 加载中
   if (initialized === null) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div
+        className="flex h-screen items-center justify-center"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
         <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-amber-500/20 border-t-amber-500" />
+          <div
+            className="h-10 w-10 animate-spin rounded-full border-2 border-t-amber-500"
+            style={{ borderColor: 'color-mix(in srgb, var(--accent) 20%, transparent)', borderTopColor: 'var(--accent)' }}
+          />
           <p className="text-sm text-cream-dim">正在加载保险库…</p>
         </div>
       </div>

@@ -122,10 +122,22 @@ export default function Unlock() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
+    <div
+      className="relative flex min-h-screen items-center justify-center overflow-hidden px-4"
+      style={{
+        paddingTop: 'calc(env(safe-area-inset-top) + 1rem)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)',
+      }}
+    >
       {/* 装饰光晕 */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-amber-500/10 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 right-0 h-72 w-72 rounded-full bg-success/5 blur-3xl" />
+      <div
+        className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full blur-3xl"
+        style={{ backgroundColor: 'var(--accent-soft)' }}
+      />
+      <div
+        className="pointer-events-none absolute bottom-0 right-0 h-72 w-72 rounded-full blur-3xl"
+        style={{ backgroundColor: 'color-mix(in srgb, var(--success) 5%, transparent)' }}
+      />
 
       <div className="relative w-full max-w-md animate-rise">
         {/* 品牌标识 */}

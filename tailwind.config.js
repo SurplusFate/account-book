@@ -12,32 +12,30 @@ export default {
         '4.5': '1.125rem',
       },
       colors: {
-        // 深墨绿/炭黑底
+        // 语义化颜色：直接引用 CSS 变量，便于主题切换
         ink: {
-          950: "#0B0F0E",
-          900: "#0E1A17",
-          800: "#13231F",
-          700: "#1A2E29",
-          600: "#243933",
+          950: "var(--bg)",
+          900: "var(--bg-elev)",
+          800: "var(--bg-card-solid)",
+          700: "var(--bg-card-solid)",
+          600: "var(--bg-card-solid)",
         },
-        // 琥珀金强调色
         amber: {
-          DEFAULT: "#E8B14A",
-          50: "#FDF6E6",
-          100: "#FAE9C2",
-          400: "#EFC56A",
-          500: "#E8B14A",
-          600: "#D49A2E",
-          700: "#A8761F",
+          DEFAULT: "var(--accent)",
+          50: "var(--accent-soft)",
+          100: "var(--accent-soft)",
+          400: "var(--accent-hover)",
+          500: "var(--accent)",
+          600: "var(--accent)",
+          700: "var(--accent)",
         },
-        // 柔和米白文字
         cream: {
-          DEFAULT: "#F2EBDC",
-          muted: "#C9C3B4",
-          dim: "#8A958F",
+          DEFAULT: "var(--text)",
+          muted: "var(--text-muted)",
+          dim: "var(--text-dim)",
         },
-        danger: "#E06464",
-        success: "#5BC18F",
+        danger: "var(--danger)",
+        success: "var(--success)",
       },
       fontFamily: {
         serif: ['"Spectral"', 'Georgia', 'serif'],
@@ -45,13 +43,13 @@ export default {
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
       boxShadow: {
-        glow: "0 0 40px -10px rgba(232,177,74,0.35)",
+        glow: "0 0 40px -10px color-mix(in srgb, var(--accent) 35%, transparent)",
         card: "0 8px 30px -12px rgba(0,0,0,0.6)",
         'card-hover': "0 14px 40px -12px rgba(0,0,0,0.7)",
       },
       backgroundImage: {
         'radial-glow':
-          "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(232,177,74,0.12), transparent 70%)",
+          "radial-gradient(ellipse 80% 60% at 50% -10%, var(--accent-soft), transparent 70%)",
         'noise':
           "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.9 0 0 0 0 0.85 0 0 0 0 0.7 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
       },

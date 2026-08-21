@@ -14,6 +14,8 @@ import {
   Timer,
   Clipboard,
   Fingerprint,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import { useStore } from '@/store';
 import StrengthMeter from '@/components/StrengthMeter';
@@ -28,6 +30,12 @@ import {
   biometricLabel,
 } from '@/lib/biometric';
 import { BiometryType } from '@aparajita/capacitor-biometric-auth';
+import {
+  applyTheme,
+  getStoredTheme,
+  saveTheme,
+  type Theme,
+} from '@/lib/theme';
 
 const AUTO_LOCK_OPTIONS = [
   { value: 1, label: '1 分钟' },
@@ -71,6 +79,9 @@ export default function Settings() {
   const [bioType, setBioType] = useState<BiometryType>(BiometryType.none);
   const bioName = biometricLabel(bioType);
 
+  // 主题：夜间 / 日间
+  const [theme, setTheme] = useState<Theme>('dark');
+
   const settings = vault?.settings;
 
   useEffect(() => {
@@ -82,7 +93,17 @@ export default function Settings() {
         setBioEnabledState(await isBiometricEnabled());
       }
     })();
+    // 初始化：读取已保存主题
+    setTheme(getStoredTheme());
   }, []);
+
+  async function handleToggleTheme() {
+    const next: Theme = theme === 'dark' ? 'light' : 'dark';
+    saveTheme(next);
+    await applyTheme(next);
+    setTheme(next);
+    toast(next === 'light' ? '已切换至日间模式' : '已切换至夜间模式', 'success');
+  }
 
   async function handleToggleBio() {
     const masterPassword = useStore.getState().masterPassword;
@@ -232,6 +253,40 @@ export default function Settings() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* 主题切换：夜间 / 日间 */}
+        <div className="mt-5 flex items-center justify-between rounded-xl border border-cream/10 bg-white/[0.02] px-4 py-3">
+          <div className="flex items-center gap-3">
+            {theme === 'dark' ? (
+              <Moon className="h-4.5 w-4.5 text-amber-400" />
+            ) : (
+              <Sun className="h-4.5 w-4.5 text-amber-400" />
+            )}
+            <div>
+              <div className="text-sm text-cream">
+                {theme === 'dark' ? '夜间模式' : '日间模式'}
+              </div>
+              <div className="mt-0.5 text-xs text-cream-dim">
+                切换显示主题，选择更舒适的阅读观感
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={handleToggleTheme}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${
+              theme === 'dark' ? 'bg-amber-500' : 'bg-white/10'
+            }`}
+            style={{
+              backgroundColor: theme === 'dark' ? 'var(--accent)' : 'color-mix(in srgb, var(--text) 10%, transparent)',
+            }}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                theme === 'dark' ? 'translate-x-5' : 'translate-x-0'
+              }`}
+            />
+          </button>
         </div>
 
         {/* 生物识别解锁（按设备实际支持类型显示文案） */}
