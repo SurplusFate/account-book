@@ -1,35 +1,49 @@
-// 账号本子 - 主题管理（日间 / 夜间切换）
+// 账号本子 - 主题管理（日间 / 夜间 / 跟随系统）
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 
-export type Theme = 'dark' | 'light';
+export type ThemeMode = 'dark' | 'light' | 'system';
 
-const STORAGE_KEY = 'ab_theme';
+const STORAGE_KEY = 'ab_theme_mode';
 
-/** 从 localStorage 读取保存的主题，默认深色（夜间模式） */
-export function getStoredTheme(): Theme {
+type ResolvedTheme = 'dark' | 'light';
+
+/** 系统是否正在使用浅色主题 */
+function systemPrefersLight(): boolean {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  return window.matchMedia('(prefers-color-scheme: light)').matches;
+}
+
+/** 将 theme mode 解析为最终生效的 dark/light */
+export function resolveTheme(mode: ThemeMode): ResolvedTheme {
+  if (mode === 'system') return systemPrefersLight() ? 'light' : 'dark';
+  return mode;
+}
+
+/** 从 localStorage 读取保存的主题模式，默认跟随系统 */
+export function getStoredThemeMode(): ThemeMode {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === 'light' || saved === 'dark') return saved;
+    if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
   } catch {
     /* ignore */
   }
-  return 'dark';
+  return 'system';
 }
 
-/** 保存主题到 localStorage */
-export function saveTheme(theme: Theme) {
+/** 保存主题模式到 localStorage */
+export function saveThemeMode(mode: ThemeMode) {
   try {
-    localStorage.setItem(STORAGE_KEY, theme);
+    localStorage.setItem(STORAGE_KEY, mode);
   } catch {
     /* ignore */
   }
 }
 
-/** 应用主题到 DOM：切换 <html> 根元素的 .light 类，同步 Capacitor 状态栏 */
-export async function applyTheme(theme: Theme) {
+/** 将解析后的实际主题应用到 DOM + Capacitor 状态栏 */
+async function applyResolvedTheme(resolved: ResolvedTheme) {
   const root = document.documentElement;
-  if (theme === 'light') {
+  if (resolved === 'light') {
     root.classList.add('light');
     root.classList.remove('dark');
   } else {
@@ -37,25 +51,19 @@ export async function applyTheme(theme: Theme) {
     root.classList.add('dark');
   }
 
-  // 同步 meta theme-color，用于 PWA/浏览器地址栏
   const metaThemeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
   if (metaThemeColor) {
-    metaThemeColor.setAttribute(
-      'content',
-      theme === 'light' ? '#FBF7EE' : '#0B0F0E',
-    );
+    metaThemeColor.setAttribute('content', resolved === 'light' ? '#FBF7EE' : '#0B0F0E');
   }
 
-  // 同步 Capacitor 原生状态栏样式（仅原生平台）
   if (Capacitor.isNativePlatform()) {
     try {
       await StatusBar.setStyle({
-        style: theme === 'light' ? Style.Light : Style.Dark,
+        style: resolved === 'light' ? Style.Light : Style.Dark,
       });
-      // Android 5+：设置状态栏背景色与 body 背景一致，避免反差
       if (Capacitor.getPlatform() === 'android') {
         await StatusBar.setBackgroundColor({
-          color: theme === 'light' ? '#FBF7EE' : '#0B0F0E',
+          color: resolved === 'light' ? '#FBF7EE' : '#0B0F0E',
         });
       }
     } catch (err) {
@@ -64,17 +72,41 @@ export async function applyTheme(theme: Theme) {
   }
 }
 
-/** 初始化主题：读取保存值并应用（用于应用启动时） */
-export async function initTheme(): Promise<Theme> {
-  const theme = getStoredTheme();
-  await applyTheme(theme);
-  return theme;
+/** 对系统主题变化的全局监听器（跟随系统模式下触发重算应用） */
+let systemListener: ((e: MediaQueryListEvent) => void) | null = null;
+
+function ensureSystemListener(currentMode: ThemeMode) {
+  if (typeof window === 'undefined' || !window.matchMedia) return;
+  const mql = window.matchMedia('(prefers-color-scheme: light)');
+
+  if (!systemListener) {
+    systemListener = () => {
+      // 只有当前处于 system 模式时才响应系统变化
+      if (getStoredThemeMode() === 'system') {
+        void applyResolvedTheme(resolveTheme('system'));
+      }
+    };
+    if (typeof mql.addEventListener === 'function') {
+      mql.addEventListener('change', systemListener);
+    } else if (typeof (mql as any).addListener === 'function') {
+      (mql as any).addListener(systemListener);
+    }
+  }
+
+  // 立即按当前设置同步一次
+  void applyResolvedTheme(resolveTheme(currentMode));
 }
 
-/** 切换主题并持久化 */
-export async function toggleTheme(current: Theme): Promise<Theme> {
-  const next: Theme = current === 'dark' ? 'light' : 'dark';
-  saveTheme(next);
-  await applyTheme(next);
+/** 初始化主题：读取保存值并应用（用于应用启动时） */
+export async function initTheme(): Promise<ThemeMode> {
+  const mode = getStoredThemeMode();
+  ensureSystemListener(mode);
+  return mode;
+}
+
+/** 切换/设置主题模式（用于设置页）并持久化 */
+export async function setThemeMode(next: ThemeMode): Promise<ThemeMode> {
+  saveThemeMode(next);
+  ensureSystemListener(next);
   return next;
 }

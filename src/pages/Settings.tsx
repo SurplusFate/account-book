@@ -16,6 +16,8 @@ import {
   Fingerprint,
   Moon,
   Sun,
+  Monitor,
+  Palette,
 } from 'lucide-react';
 import { useStore } from '@/store';
 import StrengthMeter from '@/components/StrengthMeter';
@@ -31,10 +33,10 @@ import {
 } from '@/lib/biometric';
 import { BiometryType } from '@aparajita/capacitor-biometric-auth';
 import {
-  applyTheme,
-  getStoredTheme,
-  saveTheme,
-  type Theme,
+  getStoredThemeMode,
+  setThemeMode,
+  resolveTheme,
+  type ThemeMode,
 } from '@/lib/theme';
 
 const AUTO_LOCK_OPTIONS = [
@@ -51,6 +53,12 @@ const CLIPBOARD_OPTIONS = [
   { value: 20, label: '20 秒' },
   { value: 30, label: '30 秒' },
   { value: 60, label: '60 秒' },
+];
+
+const THEME_OPTIONS: { value: ThemeMode; label: string; icon: typeof Moon }[] = [
+  { value: 'system', label: '跟随系统', icon: Monitor },
+  { value: 'dark', label: '深色', icon: Moon },
+  { value: 'light', label: '浅色', icon: Sun },
 ];
 
 export default function Settings() {
@@ -79,8 +87,8 @@ export default function Settings() {
   const [bioType, setBioType] = useState<BiometryType>(BiometryType.none);
   const bioName = biometricLabel(bioType);
 
-  // 主题：夜间 / 日间
-  const [theme, setTheme] = useState<Theme>('dark');
+  // 主题：跟随系统 / 深色 / 浅色
+  const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
 
   const settings = vault?.settings;
 
@@ -93,16 +101,19 @@ export default function Settings() {
         setBioEnabledState(await isBiometricEnabled());
       }
     })();
-    // 初始化：读取已保存主题
-    setTheme(getStoredTheme());
+    setThemeModeState(getStoredThemeMode());
   }, []);
 
-  async function handleToggleTheme() {
-    const next: Theme = theme === 'dark' ? 'light' : 'dark';
-    saveTheme(next);
-    await applyTheme(next);
-    setTheme(next);
-    toast(next === 'light' ? '已切换至日间模式' : '已切换至夜间模式', 'success');
+  // 当系统处于跟随模式时，页面渲染的「当前生效主题」需要实时反映系统值
+  const effectiveTheme = resolveTheme(themeMode);
+
+  async function handleSelectTheme(next: ThemeMode) {
+    if (next === themeMode) return;
+    await setThemeMode(next);
+    setThemeModeState(next);
+    const label =
+      next === 'system' ? '跟随系统' : next === 'light' ? '浅色模式' : '深色模式';
+    toast(`已切换至${label}`, 'success');
   }
 
   async function handleToggleBio() {
@@ -199,8 +210,67 @@ export default function Settings() {
     <div className="animate-fade-in mx-auto max-w-2xl">
       <div className="mb-6">
         <h1 className="font-serif text-2xl font-semibold text-cream">设置</h1>
-        <p className="mt-1 text-sm text-cream-dim">安全选项、数据管理与主密码</p>
+        <p className="mt-1 text-sm text-cream-dim">显示、安全、数据管理与主密码</p>
       </div>
+
+      {/* 显示设置 —— 放在最前，属于 UI 偏好 */}
+      <section className="card mb-5 p-6">
+        <div className="mb-5 flex items-center gap-2">
+          <Palette className="h-5 w-5 text-amber-400" />
+          <h2 className="font-serif text-lg font-semibold text-cream">显示</h2>
+        </div>
+
+        {/* 主题外观：跟随系统 / 深色 / 浅色 */}
+        <div>
+          <div className="mb-3 flex items-center gap-2">
+            {effectiveTheme === 'dark' ? (
+              <Moon className="h-4 w-4 text-cream-dim" />
+            ) : (
+              <Sun className="h-4 w-4 text-cream-dim" />
+            )}
+            <span className="text-sm text-cream-muted">
+              主题外观
+              {themeMode === 'system' && (
+                <span className="ml-1.5 text-xs text-cream-dim">
+                  （当前系统：{effectiveTheme === 'dark' ? '深色' : '浅色'}）
+                </span>
+              )}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {THEME_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const active = themeMode === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => void handleSelectTheme(opt.value)}
+                  className={
+                    'flex flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-3 text-xs font-medium transition-all ' +
+                    (active
+                      ? ''
+                      : 'hover:border-amber-500/30')
+                  }
+                  style={{
+                    borderColor: active ? 'var(--accent)' : 'var(--border)',
+                    backgroundColor: active ? 'var(--accent-soft)' : 'var(--bg-chip-inactive)',
+                    color: active ? 'var(--accent-hover)' : 'var(--text-muted)',
+                    boxShadow: active
+                      ? 'inset 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent)'
+                      : undefined,
+                  }}
+                >
+                  <Icon className="h-4 w-4" />
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-2.5 text-xs text-cream-dim">
+            选择「跟随系统」可随系统深色模式自动切换；切换主题时会同步调整状态栏颜色。
+          </p>
+        </div>
+      </section>
 
       {/* 安全设置 */}
       <section className="card mb-5 p-6">
@@ -220,11 +290,19 @@ export default function Settings() {
               <button
                 key={opt.value}
                 onClick={() => void updateSettings({ autoLockMinutes: opt.value })}
-                className={`chip ${
-                  settings?.autoLockMinutes === opt.value
-                    ? 'bg-amber-500 text-ink-950'
-                    : 'border border-cream/10 bg-white/[0.03] text-cream-muted hover:border-amber-500/30'
-                }`}
+                className="chip"
+                style={{
+                  backgroundColor:
+                    settings?.autoLockMinutes === opt.value ? 'var(--accent)' : 'transparent',
+                  color:
+                    settings?.autoLockMinutes === opt.value
+                      ? 'var(--text-inverse)'
+                      : 'var(--text-muted)',
+                  border:
+                    settings?.autoLockMinutes === opt.value
+                      ? '1px solid transparent'
+                      : '1px solid var(--border)',
+                }}
               >
                 {opt.label}
               </button>
@@ -243,11 +321,19 @@ export default function Settings() {
               <button
                 key={opt.value}
                 onClick={() => void updateSettings({ clipboardClearSeconds: opt.value })}
-                className={`chip ${
-                  settings?.clipboardClearSeconds === opt.value
-                    ? 'bg-amber-500 text-ink-950'
-                    : 'border border-cream/10 bg-white/[0.03] text-cream-muted hover:border-amber-500/30'
-                }`}
+                className="chip"
+                style={{
+                  backgroundColor:
+                    settings?.clipboardClearSeconds === opt.value ? 'var(--accent)' : 'transparent',
+                  color:
+                    settings?.clipboardClearSeconds === opt.value
+                      ? 'var(--text-inverse)'
+                      : 'var(--text-muted)',
+                  border:
+                    settings?.clipboardClearSeconds === opt.value
+                      ? '1px solid transparent'
+                      : '1px solid var(--border)',
+                }}
               >
                 {opt.label}
               </button>
@@ -255,43 +341,13 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* 主题切换：夜间 / 日间 */}
-        <div className="mt-5 flex items-center justify-between rounded-xl border border-cream/10 bg-white/[0.02] px-4 py-3">
-          <div className="flex items-center gap-3">
-            {theme === 'dark' ? (
-              <Moon className="h-4.5 w-4.5 text-amber-400" />
-            ) : (
-              <Sun className="h-4.5 w-4.5 text-amber-400" />
-            )}
-            <div>
-              <div className="text-sm text-cream">
-                {theme === 'dark' ? '夜间模式' : '日间模式'}
-              </div>
-              <div className="mt-0.5 text-xs text-cream-dim">
-                切换显示主题，选择更舒适的阅读观感
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={handleToggleTheme}
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${
-              theme === 'dark' ? 'bg-amber-500' : 'bg-white/10'
-            }`}
-            style={{
-              backgroundColor: theme === 'dark' ? 'var(--accent)' : 'color-mix(in srgb, var(--text) 10%, transparent)',
-            }}
-          >
-            <span
-              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-                theme === 'dark' ? 'translate-x-5' : 'translate-x-0'
-              }`}
-            />
-          </button>
-        </div>
-
         {/* 生物识别解锁（按设备实际支持类型显示文案） */}
         {bioAvailable && (
-          <div className="mt-5 flex items-center justify-between rounded-xl border border-cream/10 bg-white/[0.02] px-4 py-3">
+          <div className="mt-5 flex items-center justify-between rounded-xl border px-4 py-3"
+               style={{
+                 borderColor: 'var(--border)',
+                 backgroundColor: 'var(--bg-chip-inactive)',
+               }}>
             <div className="flex items-center gap-3">
               <Fingerprint className="h-4.5 w-4.5 text-amber-400" />
               <div>
@@ -304,9 +360,10 @@ export default function Settings() {
             <button
               onClick={handleToggleBio}
               disabled={bioBusy}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${
-                bioEnabled ? 'bg-amber-500' : 'bg-white/10'
-              }`}
+              className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors"
+              style={{
+                backgroundColor: bioEnabled ? 'var(--accent)' : 'color-mix(in srgb, var(--text) 10%, transparent)',
+              }}
             >
               <span
                 className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
@@ -371,7 +428,14 @@ export default function Settings() {
             />
           </div>
           {changeError && (
-            <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2.5 text-sm text-danger">
+            <div
+              className="rounded-lg border px-3 py-2.5 text-sm"
+              style={{
+                borderColor: 'color-mix(in srgb, var(--danger) 30%, transparent)',
+                backgroundColor: 'color-mix(in srgb, var(--danger) 10%, transparent)',
+                color: 'var(--danger)',
+              }}
+            >
               {changeError}
             </div>
           )}
@@ -389,7 +453,16 @@ export default function Settings() {
           <h2 className="font-serif text-lg font-semibold text-cream">数据管理</h2>
         </div>
         <div className="space-y-3">
-          <button onClick={handleExport} className="flex w-full items-center gap-3 rounded-xl border border-cream/10 bg-white/[0.02] px-4 py-3 text-left transition-colors hover:border-amber-500/30">
+          <button
+            onClick={handleExport}
+            className="flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors"
+            style={{
+              borderColor: 'var(--border)',
+              backgroundColor: 'var(--bg-chip-inactive)',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--accent) 30%, transparent)')}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
+          >
             <Download className="h-4.5 w-4.5 text-amber-400" />
             <div className="flex-1">
               <div className="text-sm text-cream">导出加密备份</div>
@@ -401,7 +474,13 @@ export default function Settings() {
 
           <button
             onClick={() => fileRef.current?.click()}
-            className="flex w-full items-center gap-3 rounded-xl border border-cream/10 bg-white/[0.02] px-4 py-3 text-left transition-colors hover:border-amber-500/30"
+            className="flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors"
+            style={{
+              borderColor: 'var(--border)',
+              backgroundColor: 'var(--bg-chip-inactive)',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--accent) 30%, transparent)')}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
           >
             <Upload className="h-4.5 w-4.5 text-amber-400" />
             <div className="flex-1">
@@ -422,10 +501,18 @@ export default function Settings() {
       </section>
 
       {/* 危险操作 */}
-      <section className="rounded-2xl border border-danger/20 bg-danger/[0.04] p-6">
+      <section
+        className="rounded-2xl border p-6"
+        style={{
+          borderColor: 'color-mix(in srgb, var(--danger) 20%, transparent)',
+          backgroundColor: 'color-mix(in srgb, var(--danger) 4%, transparent)',
+        }}
+      >
         <div className="mb-4 flex items-center gap-2">
           <Trash2 className="h-5 w-5 text-danger" />
-          <h2 className="font-serif text-lg font-semibold text-danger">危险操作</h2>
+          <h2 className="font-serif text-lg font-semibold" style={{ color: 'var(--danger)' }}>
+            危险操作
+          </h2>
         </div>
         <div className="flex items-center justify-between gap-4">
           <div className="text-sm text-cream-muted">
